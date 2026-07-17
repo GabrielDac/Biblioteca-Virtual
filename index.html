@@ -357,18 +357,17 @@
           <div class="span2"><label>Color del lomo</label><div class="swatches" id="swatches"></div></div>
           <div><label>Ubicación del archivo</label>
             <select id="f-tipo" onchange="ajustarTipo()">
+              <option value="online" selected>En línea (Drive u otra URL)</option>
               <option value="local">En esta computadora</option>
-              <option value="online">En línea (Drive u otra URL)</option>
             </select>
           </div>
-          <div class="span2"><label id="f-pdf-label">Ruta del PDF</label><input id="f-pdf" placeholder="C:\Mi Biblioteca\libro.pdf"></div>
-          <div class="span2 hint" id="hintUbicacion">📌 Guardá tus PDF en una carpeta fija: si los cambiás de lugar o de nombre, hay que ingresar la ruta nueva. Para copiar la ruta: <b>Windows</b>: Mayús + clic derecho sobre el archivo → «Copiar como ruta de acceso» · <b>Mac</b>: clic derecho + tecla Option (⌥) → «Copiar como nombre de ruta».</div>
+          <div class="span2"><label id="f-pdf-label">Enlace (URL) del PDF</label><input id="f-pdf" placeholder="https://drive.google.com/file/d/…/view"></div>
+          <div class="span2 hint" id="hintUbicacion">🔗 Pegá el enlace del archivo. Si está en <b>Google Drive</b>: clic derecho sobre el archivo → <b>Compartir</b> → en «Acceso general» elegí <b>Cualquier persona con el enlace</b> → <b>Copiar enlace</b>.<br><br>En la versión de escritorio (descargable) la ruta local del PDF se elegirá con un explorador de archivos.</div>
           <div class="span2"><label>Notas</label><textarea id="f-notas" rows="2"></textarea></div>
         </div>
         <div class="form-actions">
           <button class="btn" type="submit" id="btnGuardar">Ingresar al estante</button>
           <button class="btn sec" type="button" onclick="limpiarFicha()">Limpiar</button>
-          <span class="hint">En la versión de escritorio (Tauri) la ruta del PDF se elegirá con un explorador de archivos.</span>
         </div>
       </form>
     </div>
@@ -739,11 +738,11 @@ function ajustarTipo(){
   if (t === 'online'){
     lab.textContent = 'Enlace (URL) del PDF';
     inp.placeholder = 'https://drive.google.com/file/d/…/view';
-    hint.innerHTML = '🔗 Pegá el enlace del archivo. Si está en <b>Google Drive</b>: clic derecho sobre el archivo → <b>Compartir</b> → en «Acceso general» elegí <b>Cualquier persona con el enlace</b> → <b>Copiar enlace</b>.<br>En la versión de escritorio (descargable) la ruta local del PDF se elegirá con un explorador de archivos.';
+    hint.innerHTML = '🔗 Pegá el enlace del archivo. Si está en <b>Google Drive</b>: clic derecho sobre el archivo → <b>Compartir</b> → en «Acceso general» elegí <b>Cualquier persona con el enlace</b> → <b>Copiar enlace</b>.<br><br>En la versión de escritorio (descargable) la ruta local del PDF se elegirá con un explorador de archivos.';
   } else {
     lab.textContent = 'Ruta del PDF';
     inp.placeholder = 'C:\\Mi Biblioteca\\libro.pdf';
-    hint.innerHTML = '📌 Guardá tus PDF en una carpeta fija: si los cambiás de lugar o de nombre, hay que ingresar la ruta nueva. Para copiar la ruta: <b>Windows</b>: Mayús + clic derecho sobre el archivo → «Copiar como ruta de acceso» · <b>Mac</b>: clic derecho + tecla Option (⌥) → «Copiar como nombre de ruta».';
+    hint.innerHTML = '📌 Guardá tus PDF en una carpeta fija: si los cambiás de lugar o de nombre, hay que ingresar la ruta nueva. Para copiar la ruta: <b>Windows</b>: Mayús + clic derecho sobre el archivo → «Copiar como ruta de acceso» · <b>Mac</b>: clic derecho + tecla Option (⌥) → «Copiar como nombre de ruta».<br><br>En la versión de escritorio (descargable) la ruta local del PDF se elegirá con un explorador de archivos, sin necesidad de copiarla.';
   }
 }
 
@@ -786,6 +785,7 @@ function limpiarFicha(){
   document.getElementById('ficha').reset();
   document.getElementById('f-sig').dataset.manual = '';
   edicionId = null;
+  ajustarTipo();
   document.getElementById('fichaTitulo').textContent = 'Ficha de ingreso';
   document.getElementById('btnGuardar').textContent = 'Ingresar al estante';
 }
