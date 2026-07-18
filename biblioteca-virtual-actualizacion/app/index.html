@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Biblioteca Virtual — Prototipo</title>
+<title>Biblioteca Virtual</title>
 <style>
   /* ============ TOKENS / SKINS ============ */
   :root {
@@ -331,7 +331,7 @@
 <body>
 
 <header>
-  <h1>Biblioteca Virtual <small>prototipo · ordenada por CDU</small></h1>
+  <h1>Biblioteca Virtual <small>ordenada por CDU</small></h1>
   <nav class="tabs">
     <button class="tab-btn active" data-vista="estanteria" onclick="cambiarVista('estanteria')">Estantería</button>
     <button class="tab-btn" data-vista="catalogo" onclick="cambiarVista('catalogo')">Catálogo / Ficha</button>
@@ -393,7 +393,7 @@
               <option value="local">En esta computadora</option>
             </select>
           </div>
-          <div class="span2"><label id="f-pdf-label">Enlace (URL) del PDF</label><input id="f-pdf" placeholder="https://drive.google.com/file/d/…/view"></div>
+          <div class="span2"><label id="f-pdf-label">Enlace (URL) del PDF</label><div style="display:flex;gap:8px"><input id="f-pdf" placeholder="https://drive.google.com/file/d/…/view" style="flex:1"><button class="btn sec" type="button" id="btnElegir" style="display:none;white-space:nowrap" onclick="elegirPDF()">Elegir archivo…</button></div></div>
           <div class="span2 hint" id="hintUbicacion">🔗 Pegá el enlace del archivo. Si está en <b>Google Drive</b>: clic derecho sobre el archivo → <b>Compartir</b> → en «Acceso general» elegí <b>Cualquier persona con el enlace</b> → <b>Copiar enlace</b>.<br><br>En la versión de escritorio (descargable) la ruta local del PDF se elegirá con un explorador de archivos.</div>
           <div class="span2"><label>Notas</label><textarea id="f-notas" rows="2"></textarea></div>
         </div>
@@ -501,6 +501,15 @@ let seleccionId = null;   // libro abierto en el modal
 let edicionId = null;     // libro en edición en la ficha
 let colorSel = PALETA[0];
 const CAPACIDAD_ESTANTE = 780; // px de lomos por estante
+
+/* ============ INTEGRACIÓN CON LA APLICACIÓN DE ESCRITORIO (TAURI) ============ */
+const TAURI = typeof window.__TAURI__ !== 'undefined';
+async function elegirPDF(){
+  try {
+    const sel = await window.__TAURI__.dialog.open({ multiple: false, filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+    if (sel) document.getElementById('f-pdf').value = Array.isArray(sel) ? sel[0] : sel;
+  } catch(e){ alert('No se pudo abrir el explorador de archivos: ' + e); }
+}
 
 const DEMO = [
   ["Introducción a la bibliotecología","Rendón Rojas, Miguel",2017,"UNAM","02","REN i",310,180,'#31513a','clasica',"México"],
@@ -817,6 +826,14 @@ function ajustarTipo(){
   const lab = document.getElementById('f-pdf-label');
   const inp = document.getElementById('f-pdf');
   const hint = document.getElementById('hintUbicacion');
+  const btn = document.getElementById('btnElegir');
+  if (btn) btn.style.display = (TAURI && t === 'local') ? '' : 'none';
+  if (TAURI && t === 'local'){
+    lab.textContent = 'Ruta del PDF';
+    inp.placeholder = 'Usá «Elegir archivo…» para vincular el PDF';
+    hint.innerHTML = '📌 Elegí el PDF con el botón «Elegir archivo…» y la ruta se completa sola. Guardá tus PDF en una carpeta fija: si los cambiás de lugar o de nombre, volvé a vincularlos desde la ficha.';
+    return;
+  }
   if (t === 'online'){
     lab.textContent = 'Enlace (URL) del PDF';
     inp.placeholder = 'https://drive.google.com/file/d/…/view';
@@ -908,6 +925,10 @@ function abrirPDF(){
   if (!ruta){ alert('Este registro no tiene vínculo cargado. Editá la ficha para agregarlo.'); return; }
   const online = /^https?:\/\//i.test(ruta);
   if (!online){
+    if (TAURI){
+      window.__TAURI__.opener.openPath(ruta).catch(e=>alert('No se pudo abrir el archivo:\n\n'+ruta+'\n\n'+e));
+      return;
+    }
     // Si esta página corre desde el disco (file://), el navegador suele permitir abrir otros archivos locales
     if (location.protocol === 'file:'){
       const u = 'file:///' + encodeURI(ruta.replace(/\\/g,'/').replace(/^\/+/,''));
@@ -927,6 +948,8 @@ function abrirPDF(){
     document.getElementById('lectorFrame').src = u;
     cerrarLibro();
     document.getElementById('lectorOv').classList.add('open');
+  } else if (TAURI){
+    window.__TAURI__.opener.openUrl(ruta).catch(e=>alert('No se pudo abrir el enlace: '+e));
   } else {
     window.open(ruta, '_blank');
   }
@@ -1046,6 +1069,12 @@ function sombra(hex, pct){
   await cargarPrefs();
   initSwatches();
   renderCatalogo();
+  if (TAURI){
+    document.getElementById('f-tipo').value = 'local';
+    const b = document.getElementById('btnDescargarApp');
+    if (b) b.style.display = 'none';
+  }
+  ajustarTipo();
   enPared = agruparBibliotecas().length > 1;  // con varias bibliotecas se entra por la pared
   renderEstanteria();
 })();
