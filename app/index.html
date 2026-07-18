@@ -286,6 +286,13 @@
     font-size: 12px; cursor: pointer; border: 1px solid var(--panel-line);
     background: transparent; color: var(--panel-ink); border-radius: 3px; padding: 3px 9px; margin-right: 4px;
   }
+  .lectura-inline { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+  .lectura-inline select {
+    padding: 8px 10px; font-size: 14px; font-family: var(--f-ui);
+    border: 1px solid var(--panel-line); border-radius: 3px;
+    background: rgba(255,255,255,.55); color: var(--panel-ink);
+  }
+  [data-skin="espacial"] .lectura-inline select { background: rgba(255,255,255,.06); }
 
   /* ============ LIBRO EN MANO (modal) ============ */
   .overlay {
@@ -400,10 +407,15 @@
     <div class="card">
       <h2>Catálogo (<span id="total">0</span> registros)</h2>
       <p class="sub">Ordenado con el mismo criterio que el estante.</p>
-      <div class="form-actions" style="margin-top:0;margin-bottom:16px">
+      <div class="form-actions" style="margin-top:0;margin-bottom:16px;flex-wrap:wrap">
         <button class="btn sec" type="button" onclick="exportarJSON()">Exportar catálogo</button>
         <button class="btn sec" type="button" onclick="document.getElementById('importFile').click()">Importar</button>
-        <button class="btn sec" type="button" onclick="abrirPrefs()">⚙ Preferencias</button>
+        <span class="lectura-inline">Modo de lectura:
+          <select id="p-lectura" onchange="cambiarLectura(this.value)">
+            <option value="externo">Lector externo del sistema</option>
+            <option value="integrado">Dentro de la aplicación</option>
+          </select>
+        </span>
       </div>
       <table class="cat">
         <thead><tr><th>CDU</th><th>Signatura</th><th>Autor</th><th>Título</th><th>País</th><th>Lomo</th><th></th></tr></thead>
@@ -441,35 +453,12 @@
   </div>
 </div>
 
-<!-- ================= PREFERENCIAS ================= -->
-<div class="overlay" id="prefsOv" onclick="if(event.target===this) cerrarPrefs()">
-  <div class="card" style="max-width:440px;width:100%;margin:0">
-    <h2>⚙ Preferencias</h2>
-    <p class="sub">Se recuerdan en este dispositivo y valen para toda la biblioteca.</p>
-    <form onsubmit="return false">
-      <div class="grid">
-        <div class="span2"><label>Modo de lectura (todos los libros)</label>
-          <select id="p-lectura">
-            <option value="externo">Lector externo del sistema</option>
-            <option value="integrado">Dentro de la aplicación</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-actions">
-        <button class="btn" onclick="guardarPrefs()">Guardar</button>
-        <button class="btn sec" onclick="cerrarPrefs()">Cancelar</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- ================= LECTOR INTEGRADO ================= -->
 <div class="overlay" id="lectorOv" onclick="if(event.target===this) cerrarLector()">
   <div style="width:min(920px,96vw);height:min(88vh,940px);background:#1c1c1c;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.6)">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 12px;color:#ddd;font-size:13px">
       <span id="lectorTitulo" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
       <span style="display:flex;gap:6px;flex-shrink:0">
-        <button class="rowbtn" style="color:#eee;border-color:#555" onclick="lectorTema()" title="Fondo claro / oscuro">☀ / 🌙</button>
         <button class="rowbtn" style="color:#eee;border-color:#555" onclick="lectorZoom(-0.15)" title="Reducir">A−</button>
         <button class="rowbtn" style="color:#eee;border-color:#555" onclick="lectorZoom(0.15)" title="Aumentar">A+</button>
         <button class="rowbtn" style="color:#eee;border-color:#555" onclick="cerrarLector()">Devolver al estante ✕</button>
@@ -768,6 +757,15 @@ function aplicarBusqueda(m){
   });
   if (primero) primero.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
 }
+function limpiarBusqueda(){
+  if (!busqueda) return;
+  busqueda = '';
+  const inp = document.getElementById('buscarInp');
+  if (inp) inp.value = '';
+  const info = document.getElementById('buscarInfo');
+  if (info) info.textContent = '';
+  aplicarBusqueda([]);
+}
 
 function toggleZoom(i){
   const cont = document.getElementById('bookcase');
@@ -915,7 +913,11 @@ function abrirLibro(id){
      <dt>PDF</dt><dd>${l.pdf?esc(l.pdf):'<i>sin ruta cargada</i>'}</dd>`;
   document.getElementById('overlay').classList.add('open');
 }
-function cerrarLibro(){ document.getElementById('overlay').classList.remove('open'); seleccionId=null; }
+function cerrarLibro(){
+  document.getElementById('overlay').classList.remove('open');
+  seleccionId = null;
+  limpiarBusqueda();
+}
 function editarLibro(){ const id = seleccionId; cerrarLibro(); cargarEnFicha(id); }
 function abrirPDF(){
   const l = libros.find(x=>x.id===seleccionId); if(!l) return;
@@ -952,21 +954,15 @@ function abrirPDF(){
     window.open(ruta, '_blank');
   }
 }
-let lectorZ = 1, lectorOscuro = false;
+let lectorZ = 1;
 function lectorReset(){
-  lectorZ = 1; lectorOscuro = false;
+  lectorZ = 1;
   const f = document.getElementById('lectorFrame');
-  f.style.zoom = 1; f.style.filter = ''; f.style.background = '#fff';
+  f.style.zoom = 1; f.style.background = '#fff';
 }
 function lectorZoom(d){
   lectorZ = Math.min(2, Math.max(0.6, +(lectorZ + d).toFixed(2)));
   document.getElementById('lectorFrame').style.zoom = lectorZ;
-}
-function lectorTema(){
-  lectorOscuro = !lectorOscuro;
-  const f = document.getElementById('lectorFrame');
-  f.style.background = lectorOscuro ? '#111' : '#fff';
-  f.style.filter = lectorOscuro ? 'invert(0.92) hue-rotate(180deg)' : '';
 }
 function cerrarLector(){
   document.getElementById('lectorOv').classList.remove('open');
@@ -1031,16 +1027,10 @@ function aplicarPrefs(){
   document.documentElement.dataset.skin = prefs.skin;
   const sel = document.getElementById('skinSel');
   if (sel) sel.value = prefs.skin;
+  const pl = document.getElementById('p-lectura');
+  if (pl) pl.value = prefs.lectura;
 }
-function abrirPrefs(){
-  document.getElementById('p-lectura').value = prefs.lectura;
-  document.getElementById('prefsOv').classList.add('open');
-}
-function cerrarPrefs(){ document.getElementById('prefsOv').classList.remove('open'); }
-function guardarPrefs(){
-  prefs.lectura = document.getElementById('p-lectura').value;
-  aplicarPrefs(); persistirPrefs(); cerrarPrefs();
-}
+function cambiarLectura(v){ prefs.lectura = v; persistirPrefs(); }
 
 /* ============ VARIOS ============ */
 function cambiarVista(v){
