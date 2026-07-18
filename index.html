@@ -394,7 +394,7 @@
             </select>
           </div>
           <div class="span2"><label id="f-pdf-label">Enlace (URL) del PDF</label><input id="f-pdf" placeholder="https://drive.google.com/file/d/…/view"></div>
-          <div class="span2 hint" id="hintUbicacion">🔗 Pegá el enlace del archivo. Si está en <b>Google Drive</b>: clic derecho sobre el archivo → <b>Compartir</b> → en «Acceso general» elegí <b>Cualquier persona con el enlace</b> → <b>Copiar enlace</b>.<br><br>En la versión de escritorio (descargable) la ruta local del PDF se elegirá con un explorador de archivos.</div>
+          <div class="span2 hint" id="hintUbicacion">🔒 La Biblioteca Virtual no tiene servidor de datos: el catálogo se guarda en el almacenamiento local del navegador — es decir, en tu propia computadora.<br><br><span id="hintTipo">🔗 Pegá el enlace del archivo. Si está en <b>Google Drive</b>: clic derecho sobre el archivo → <b>Compartir</b> → en «Acceso general» elegí <b>Cualquier persona con el enlace</b> → <b>Copiar enlace</b>.<br><br>En la versión de escritorio (descargable) la ruta local del PDF se elegirá con un explorador de archivos.</span></div>
           <div class="span2"><label>Notas</label><textarea id="f-notas" rows="2"></textarea></div>
         </div>
         <div class="form-actions">
@@ -816,7 +816,7 @@ function ajustarTipo(){
   const t = document.getElementById('f-tipo').value;
   const lab = document.getElementById('f-pdf-label');
   const inp = document.getElementById('f-pdf');
-  const hint = document.getElementById('hintUbicacion');
+  const hint = document.getElementById('hintTipo');
   if (t === 'online'){
     lab.textContent = 'Enlace (URL) del PDF';
     inp.placeholder = 'https://drive.google.com/file/d/…/view';
