@@ -208,6 +208,29 @@
   .mini-label .temas { display: block; margin-top: 5px; opacity: .85; font-size: 11.5px; font-style: italic; }
   .shelf-head .tema { font-size: 12.5px; opacity: .88; font-family: var(--f-display); font-style: italic; }
 
+  /* ============ BÚSQUEDA ============ */
+  .search-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search-bar input[type="search"] {
+    flex: 1; min-width: 220px; padding: 9px 14px; font-size: 14px; font-family: var(--f-ui);
+    border-radius: 4px; border: 1px solid rgba(255,255,255,.3);
+    background: rgba(255,255,255,.08); color: var(--header-ink);
+  }
+  .search-bar input[type="search"]::placeholder { color: var(--header-ink); opacity: .55; }
+  .search-bar input[type="search"]:focus { outline: 2px solid var(--accent); }
+  .search-bar .hintbar { font-size: 12.5px; opacity: .85; }
+  .spine.hit { outline: 3px solid var(--accent); outline-offset: 2px; z-index: 1; }
+  .bookcase.buscando .spine:not(.hit) { opacity: .3; }
+
+  /* ============ DESCARGAS ============ */
+  .dl-botones { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  .btn.dl {
+    text-decoration: none; display: inline-flex; flex-direction: column;
+    align-items: center; gap: 2px; flex: 1; min-width: 118px; text-align: center;
+  }
+  .btn.dl small { font-size: 11px; opacity: .85; font-weight: normal; }
+  .btn.dl.reco { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .hint a { color: inherit; }
+
   /* ============ FICHA / CATÁLOGO ============ */
   .card {
     background: var(--panel); color: var(--panel-ink);
@@ -306,19 +329,21 @@
     <button class="tab-btn active" data-vista="estanteria" onclick="cambiarVista('estanteria')">Estantería</button>
     <button class="tab-btn" data-vista="catalogo" onclick="cambiarVista('catalogo')">Catálogo / Ficha</button>
   </nav>
-  <select class="skin" id="skinSel" onchange="cambiarSkin(this.value)" title="Skin de la biblioteca">
-    <option value="clasica">Skin: Clásica</option>
-    <option value="espacial">Skin: Espacial</option>
-  </select>
-  <button class="ghost-btn" onclick="abrirPrefs()">⚙ Preferencias</button>
-  <button class="ghost-btn" onclick="exportarJSON()">Exportar catálogo</button>
-  <button class="ghost-btn" onclick="document.getElementById('importFile').click()">Importar</button>
+  <button class="ghost-btn" id="btnDescargarApp" onclick="abrirDescargas()">⬇ Descargar App</button>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importarJSON(this)">
 </header>
 
 <main>
   <!-- ================= FRONTEND: ESTANTERÍA ================= -->
   <section id="vista-estanteria" class="vista active">
+    <div class="search-bar">
+      <input id="buscarInp" type="search" placeholder="🔍 Buscar por título, autor, CDU o signatura…" oninput="buscar(this.value)" autocomplete="off">
+      <span class="hintbar" id="buscarInfo"></span>
+      <select class="skin" id="skinSel" onchange="cambiarSkin(this.value)" title="Skin de la biblioteca">
+        <option value="clasica">Skin: Clásica</option>
+        <option value="espacial">Skin: Espacial</option>
+      </select>
+    </div>
     <div class="case-toolbar" id="caseToolbar"></div>
     <div id="wall" class="wall" style="display:none"></div>
     <div id="bookcase" class="bookcase"></div>
@@ -374,7 +399,12 @@
 
     <div class="card">
       <h2>Catálogo (<span id="total">0</span> registros)</h2>
-      <p class="sub">Ordenado por CDU y signatura, igual que en el estante.</p>
+      <p class="sub">Ordenado con el mismo criterio que el estante.</p>
+      <div class="form-actions" style="margin-top:0;margin-bottom:16px">
+        <button class="btn sec" type="button" onclick="exportarJSON()">Exportar catálogo</button>
+        <button class="btn sec" type="button" onclick="document.getElementById('importFile').click()">Importar</button>
+        <button class="btn sec" type="button" onclick="abrirPrefs()">⚙ Preferencias</button>
+      </div>
       <table class="cat">
         <thead><tr><th>CDU</th><th>Signatura</th><th>Autor</th><th>Título</th><th>País</th><th>Lomo</th><th></th></tr></thead>
         <tbody id="catBody"></tbody>
@@ -392,6 +422,25 @@
   <span style="opacity:.65">(la primera carga puede demorar unos 30 segundos)</span>
 </footer>
 
+<!-- ================= DESCARGAS ================= -->
+<div class="overlay" id="descargasOv" onclick="if(event.target===this) cerrarDescargas()">
+  <div class="card" style="max-width:540px;width:100%;margin:0">
+    <h2>⬇ Descargar la aplicación</h2>
+    <p class="sub">La misma biblioteca, instalada en tu computadora: abre los PDF locales con un clic, funciona sin internet y elegís los archivos con el explorador, sin copiar rutas.</p>
+    <div class="dl-botones">
+      <a class="btn dl" id="dl-mac" href="https://github.com/GabrielDac/Biblioteca-Virtual/releases/latest" target="_blank" rel="noopener">Mac <small>(.dmg)</small></a>
+      <a class="btn dl" id="dl-win" href="https://github.com/GabrielDac/Biblioteca-Virtual/releases/latest" target="_blank" rel="noopener">Windows <small>(.exe)</small></a>
+      <a class="btn dl" id="dl-linux" href="https://github.com/GabrielDac/Biblioteca-Virtual/releases/latest" target="_blank" rel="noopener">Linux <small>(.AppImage)</small></a>
+    </div>
+    <p class="hint" style="margin-top:12px">Otras opciones — Linux: <a id="dl-deb" href="https://github.com/GabrielDac/Biblioteca-Virtual/releases/latest" target="_blank" rel="noopener">.deb</a> · <a id="dl-rpm" href="https://github.com/GabrielDac/Biblioteca-Virtual/releases/latest" target="_blank" rel="noopener">.rpm</a> &nbsp;·&nbsp; Windows: <a id="dl-msi" href="https://github.com/GabrielDac/Biblioteca-Virtual/releases/latest" target="_blank" rel="noopener">.msi</a></p>
+    <p class="hint" style="margin-top:12px">Al abrir por primera vez, Windows y Mac pueden mostrar un aviso de «desarrollador no identificado»: es lo esperable en software libre sin certificado comercial. En Mac: clic derecho sobre la aplicación → Abrir → Abrir (solo la primera vez).</p>
+    <div class="form-actions">
+      <a class="btn sec" style="text-decoration:none" href="https://github.com/GabrielDac/Biblioteca-Virtual/releases/latest" target="_blank" rel="noopener">Todas las versiones</a>
+      <button class="btn sec" onclick="cerrarDescargas()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ================= PREFERENCIAS ================= -->
 <div class="overlay" id="prefsOv" onclick="if(event.target===this) cerrarPrefs()">
   <div class="card" style="max-width:440px;width:100%;margin:0">
@@ -403,12 +452,6 @@
           <select id="p-lectura">
             <option value="externo">Lector externo del sistema</option>
             <option value="integrado">Dentro de la aplicación</option>
-          </select>
-        </div>
-        <div class="span2"><label>Skin de la biblioteca</label>
-          <select id="p-skin">
-            <option value="clasica">Clásica</option>
-            <option value="espacial">Espacial</option>
           </select>
         </div>
       </div>
@@ -614,7 +657,10 @@ function renderEstanteria(){
     return;
   }
   if (enPared){ renderPared(muebles, toolbar, wall, cont); }
-  else { renderBiblioteca(muebles, toolbar, wall, cont); }
+  else {
+    renderBiblioteca(muebles, toolbar, wall, cont);
+    aplicarBusqueda(coincidencias());
+  }
 }
 
 function renderPared(muebles, toolbar, wall, cont){
@@ -672,6 +718,7 @@ function renderBiblioteca(muebles, toolbar, wall, cont){
       s.style.setProperty('--w', anchoLomo(l)+'px');
       s.style.setProperty('--h', l.alt+'px');
       s.style.background = `linear-gradient(90deg, ${sombra(l.color,-18)} 0%, ${l.color} 30%, ${sombra(l.color,14)} 55%, ${l.color} 100%)`;
+      s.dataset.id = l.id;
       s.title = l.autor+' — '+l.titulo;
       s.onclick = ()=>abrirLibro(l.id);
       s.innerHTML = `<div class="stitle">${esc(l.titulo)}</div>
@@ -685,6 +732,43 @@ function renderBiblioteca(muebles, toolbar, wall, cont){
 
 function verPared(){ enPared = true; renderEstanteria(); }
 function moverMueble(d){ muebleIdx += d; renderEstanteria(); }
+
+/* ============ BÚSQUEDA EN LA ESTANTERÍA ============ */
+let busqueda = '';
+function normalizar(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function coincidencias(){
+  if (!busqueda) return [];
+  const q = normalizar(busqueda);
+  return libros.filter(l => [l.titulo, l.autor, l.cdu, l.sig, l.editorial, l.pais].some(c => normalizar(c).includes(q)));
+}
+function buscar(v){
+  busqueda = v.trim();
+  const info = document.getElementById('buscarInfo');
+  if (!busqueda){ info.textContent = ''; aplicarBusqueda([]); return; }
+  const m = coincidencias();
+  if (!m.length){ info.textContent = 'Sin resultados'; aplicarBusqueda([]); return; }
+  info.textContent = m.length === 1 ? '1 resultado' : m.length + ' resultados';
+  // Saltar a la biblioteca que contiene el primer resultado
+  const muebles = agruparBibliotecas();
+  const primero = m[0].id;
+  let idx = muebles.findIndex(mu => mu.flat().some(l => l.id === primero));
+  if (idx < 0) idx = 0;
+  if (enPared || muebleIdx !== idx){ enPared = false; muebleIdx = idx; renderEstanteria(); }
+  else aplicarBusqueda(m);
+}
+function aplicarBusqueda(m){
+  const ids = new Set(m.map(l => l.id));
+  const cont = document.getElementById('bookcase');
+  cont.classList.toggle('buscando', ids.size > 0);
+  let primero = null;
+  cont.querySelectorAll('.spine').forEach(s => {
+    const hit = ids.has(s.dataset.id);
+    s.classList.toggle('hit', hit);
+    if (hit && !primero) primero = s;
+  });
+  if (primero) primero.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+}
+
 function toggleZoom(i){
   const cont = document.getElementById('bookcase');
   const rows = cont.querySelectorAll('.shelf-row');
@@ -889,6 +973,43 @@ function cerrarLector(){
   document.getElementById('lectorFrame').src = 'about:blank';
 }
 
+/* ============ DESCARGAS DE LA APLICACIÓN ============ */
+let descargasCargadas = false;
+function abrirDescargas(){
+  document.getElementById('descargasOv').classList.add('open');
+  marcarSistema();
+  if (!descargasCargadas) cargarDescargas();
+}
+function cerrarDescargas(){ document.getElementById('descargasOv').classList.remove('open'); }
+function marcarSistema(){
+  const ua = navigator.userAgent;
+  let id = null;
+  if (/Mac|iPhone|iPad/i.test(ua)) id = 'dl-mac';
+  else if (/Win/i.test(ua)) id = 'dl-win';
+  else if (/Linux|X11/i.test(ua)) id = 'dl-linux';
+  if (id){
+    const el = document.getElementById(id);
+    el.classList.add('reco');
+    el.title = 'Recomendado para tu sistema';
+  }
+}
+async function cargarDescargas(){
+  try {
+    const r = await fetch('https://api.github.com/repos/GabrielDac/Biblioteca-Virtual/releases/latest');
+    if (!r.ok) return;
+    const data = await r.json();
+    const buscar = fin => (data.assets || []).find(a => a.name.toLowerCase().endsWith(fin));
+    const set = (id, asset) => { if (asset) document.getElementById(id).href = asset.browser_download_url; };
+    set('dl-mac', buscar('.dmg'));
+    set('dl-win', buscar('-setup.exe') || buscar('.exe'));
+    set('dl-linux', buscar('.appimage'));
+    set('dl-deb', buscar('.deb'));
+    set('dl-rpm', buscar('.rpm'));
+    set('dl-msi', buscar('.msi'));
+    descargasCargadas = true;
+  } catch(e){ /* si la API no responde, quedan los enlaces a la página de versiones */ }
+}
+
 /* ============ PREFERENCIAS ============ */
 let prefs = { lectura: 'externo', skin: 'clasica' };
 async function cargarPrefs(){
@@ -913,13 +1034,11 @@ function aplicarPrefs(){
 }
 function abrirPrefs(){
   document.getElementById('p-lectura').value = prefs.lectura;
-  document.getElementById('p-skin').value = document.documentElement.dataset.skin;
   document.getElementById('prefsOv').classList.add('open');
 }
 function cerrarPrefs(){ document.getElementById('prefsOv').classList.remove('open'); }
 function guardarPrefs(){
   prefs.lectura = document.getElementById('p-lectura').value;
-  prefs.skin = document.getElementById('p-skin').value;
   aplicarPrefs(); persistirPrefs(); cerrarPrefs();
 }
 
@@ -960,7 +1079,11 @@ function sombra(hex, pct){
   await cargarPrefs();
   initSwatches();
   renderCatalogo();
-  if (TAURI) document.getElementById('f-tipo').value = 'local';
+  if (TAURI){
+    document.getElementById('f-tipo').value = 'local';
+    const b = document.getElementById('btnDescargarApp');
+    if (b) b.style.display = 'none';
+  }
   ajustarTipo();
   enPared = agruparBibliotecas().length > 1;  // con varias bibliotecas se entra por la pared
   renderEstanteria();
