@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Biblioteca Virtual — Prototipo</title>
+<title>Biblioteca Virtual</title>
 <style>
   /* ============ TOKENS / SKINS ============ */
   :root {
@@ -331,7 +331,7 @@
 <body>
 
 <header>
-  <h1>Biblioteca Virtual <small>prototipo · ordenada por CDU</small></h1>
+  <h1>Biblioteca Virtual <small>ordenada por CDU</small></h1>
   <nav class="tabs">
     <button class="tab-btn active" data-vista="estanteria" onclick="cambiarVista('estanteria')">Estantería</button>
     <button class="tab-btn" data-vista="catalogo" onclick="cambiarVista('catalogo')">Catálogo / Ficha</button>
@@ -429,9 +429,8 @@
   Biblioteca Virtual · © 2026 <b>Gabriel Da Costa Porto Luzardo</b> · <a href="mailto:gabomvd@gmail.com">gabomvd@gmail.com</a> ·
   Software libre bajo licencia <a href="https://www.gnu.org/licenses/gpl-3.0.es.html" target="_blank" rel="noopener">GNU GPL-3.0</a> ·
   <span class="brand">Powered by Anthrop\c</span><br>
-  Otros proyectos: <a href="https://referencias-bibliograficas.onrender.com" target="_blank" rel="noopener">Referencias</a> ·
-  <a href="https://clasificacion-total.onrender.com" target="_blank" rel="noopener">Clasificación documental</a>
-  <span style="opacity:.65">(la primera carga puede demorar unos 30 segundos)</span>
+<details style="margin:12px auto;max-width:900px;text-align:left"><summary style="cursor:pointer;text-align:center">ℹ️ Acerca de esta herramienta</summary><p style="margin:10px 0 4px;line-height:1.6">Biblioteca Virtual permite organizar y consultar libros digitales como en una estantería real: cada documento se describe en una ficha catalográfica, recibe su clasificación CDU y su signatura topográfica, y se ubica en el estante como un lomo con tejuelo, con grosor y altura proporcionales a sus páginas y formato. Los documentos se vinculan mediante enlaces (Drive u otros servicios) en la versión web, o seleccionando archivos locales en la aplicación de escritorio, disponible para Windows, macOS y Linux. Técnicamente es una aplicación construida en HTML, CSS y JavaScript puros, sin servidor de datos: el catálogo se guarda en el navegador de cada usuario, y puede exportarse e importarse como archivo JSON para respaldo o traslado. La versión de escritorio empaqueta la misma interfaz con el framework Tauri (Rust), y sus instaladores se compilan automáticamente para los tres sistemas operativos mediante integración continua. Próximamente se podrá clasificar también por Dewey. Software libre bajo licencia GNU GPL-3.0.</p></details>
+  Otras herramientas: <a href="https://clasificacion-total.onrender.com" target="_blank" rel="noopener">Clasificación Documental</a> · <a href="https://referencias-bibliograficas.onrender.com" target="_blank" rel="noopener">Referencias Bibliográficas</a> <span style="opacity:.65">(los servidores de Render pueden demorar unos 30 segundos en la primera carga)</span>
 </footer>
 
 <!-- ================= DESCARGAS ================= -->
